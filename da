@@ -1,0 +1,148 @@
+1)Используя приложенный к данному заданию gradle wrapper, файл исходных текстов Counter.java и файл с тестами CounterTest.java, создайте локальный gradle-проект в файловой системе.
+2)Убедитесь, что созданный проект успешно собирается и что тесты выполняются. При этом один тест должен выполняться неуспешно. При необходимости обратитесь к документации.
+3)Создайте в своей учётной записи на GitHub новый репозиторий и загрузите в него созданный проект.
+4)Создайте задачу в Jenkins для сборки проекта из репозитория и отображения результатов выполнения тестов.
+5)Исправьте ошибку в классе Counter.java, которая приводит к неуспешному выполнению тестов. Зафиксируйте изменения в репозитории и перезапустите сборку задачи в Jenkins — теперь тесты должны выполняться без ошибок.
+
+
+
+Часть 1
+
+
+Такс, тут немного сложно, нам даны 3 файла 
+1)gradle-wrapper-7.5.1.zip
+2)CounterTest.java
+3)Counter.java
+
+Последовоьтельность действий
+1) распакуйте файл gradle-wrapper-7.5.1.zip у вас получиться gradle-wrapper-7.5.1 с содержанием
+/gradle-wrapper-7.5.1
+  ├── gradle
+  │   └── wrapper
+  │       ├── gradle-wrapper.jar
+  │       └── gradle-wrapper.properties
+  ├── gradlew
+  ├── gradlew.bat
+
+2) Открываем любой файл java, например CounterTest.java и тут смотим на package ru.ac.uniyar.testingcourse;
+тоесть, мы должны засунуть эту папку по этому пути 
+/gradle-wrapper-7.5.1
+  ├── gradle
+  │   └── wrapper
+  │       ├── gradle-wrapper.jar
+  │       └── gradle-wrapper.properties
+  ├── src
+  │   ├── main
+  │   │     ├──java
+  │   │         ├── ru
+  │   │             ├── ac
+  │   │                 ├── uniyar
+  │   │                     ├── testingcourse
+  │   │                         ├── Counter.java
+  │   ├── test
+  │        ├──java
+  │           ├── ru
+  │                ├── ac
+  │                    ├── uniyar
+  │                        ├── testingcourse
+  │                            ├── CounterTest.java
+  │
+  │
+  ├── gradlew
+  ├── gradlew.bat
+
+3)дальше переходим в этот файл в консоле пишем cd C:\Зачет\gradle-wrapper-7.5.1
+4)дальше в консоле пишем gradlew init и все время нажимаем enter до упора
+5) У вас создался проект с build.gradle, в него захом и пишем следующие 
+plugins {
+    id 'java'
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+}
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+P.S. Строчка :
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+}
+Возможно для вас не обязательная, просто из-за разных версий проекта джава у меня ругался, если у вас тоже, то пишите это в build.gradle а также в File -> Project Structure -> Project ->SDK: Должено быть 1.8 версия, но возможно это не обязательно
+6) Убедитесь, что проект собрался, так как у меня изначально не собрался, я не мог запустить тесты, чтобы он точно собрался, в правом верхнем углу есть слоник (Gradle) Нажмите на него, после этого нажмите обновить (Reload all...)
+Теперь при запуске тестов будет писать, что один тест не прошел проверку, это нормально, ибо нехуй 
+Команда для проверки тестов ./gradlew build test ну или в самом build.gradle запустите в ручную 
+
+Часть 3, Да-да в часте 1 есть 1 и 2ой пункт задание, но не пофиг ли ?
+И так
+1) Создайте на GitHub новый проект, Название любое, если не просят, но обязательно должен быть публичныйм, дальше создаете нажав Create
+Так сейчас хуйня для Линуксойдов
+2) зайдите в консоль убедитесь, что вы стоите в корне проекта, тоесть в cd C:\Зачет\gradle-wrapper-7.5.1
+Ибо я так один раз на Кр проебался.
+3)echo "# 111" >> README.md
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/Dorey01/111.git
+git push -u origin main
+
+Если у вас возникла ошибка
+User
+C:\Зачет\gradle-wrapper-7.5.1>git remote add origin https://github.com/Dorey01/111.git
+error: remote origin already exists.
+то пишим так:
+git remote set-url origin https://github.com/Dorey01/111.git
+git remote remove origin
+git remote add origin https://github.com/Dorey01/111.git
+git push -u origin main
+
+И все
+
+
+Часть 4, Регаемся на Jenkins и создаем новый проект указываем имя и выбираем Freestyle project
+
+1)В Source Code Management выбираем Git в Repository URL вставляем свой URL от Github, у меня так https://github.com/Dorey01/111
+В Branches to build в Branch Specifier (blank for 'any') пишем */main
+
+2)Сохраняем и запускаем если все отлично, то продолжаем, заходим дальше в конфиг 
+В Build Steps  Выбираем Invoke Gradle script кликаем на Use Gradle Wrapper и выбираем Make gradlew executable
+(Мб это нужно сделать до первого сохранения, так как у вас линукс)
+
+3) в Build Steps добовляем и выбираем Execute shell в нем вписываем ./gradlew build test
+В Post-build Actions добавляем Publish JUnit test result report в Test report XMLs вставляем build/test-results/test/*.xml
+
+Можете не запускать, будет все равно ошибка, просто сохраниет, но можете запустить, чтобы удостовериться, что не билдится
+
+Часть 5
+В Counter.java замените строчку     
+public void reset() {
+        value = 1;
+    }
+на 
+    public void reset() {
+        value = 0;
+    }
+
+И все, в консоле 
+git add . 
+git commit -m "1" 
+git push -u origin main
+
+И в Jenkins вы можете запустить и удостовериться, что выполняется
